@@ -5,6 +5,7 @@ import { fetchGitHubRepositoryArchive } from '../lib/github-fetcher'
 import { extractZipArchive } from '../lib/zip-extractor'
 import type { NodeFilter, ParseProgress, RepoMetadata } from '../types'
 import type { ParserWorkerApi } from '../workers/parser.messages'
+import { useSettingsStore } from '@/stores/settings.store'
 
 type ParseStatus = 'idle' | 'running' | 'success' | 'error'
 
@@ -72,8 +73,10 @@ export const useCodeGraphStore = create<CodeGraphState>((set, get) => ({
       let repoBranch: string
 
       if (source.type === 'github') {
+        const corsProxy = useSettingsStore.getState().proxyUrl
         const fetched = await fetchGitHubRepositoryArchive(source.value, {
           token: source.token,
+          corsProxy,
         })
 
         archive = fetched.archive

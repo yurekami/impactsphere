@@ -11,4 +11,15 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      // Proxy GitHub archive downloads to avoid CORS issues in development
+      '/api/github-zip': {
+        target: 'https://github.com',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/github-zip/, ''),
+        followRedirects: true,
+      },
+    },
+  },
 })

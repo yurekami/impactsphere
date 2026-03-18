@@ -6,6 +6,7 @@ interface GitHubRepoRef {
 export interface GitHubFetchOptions {
   token?: string
   signal?: AbortSignal
+  corsProxy?: string
 }
 
 export interface GitHubFetchResult {
@@ -110,10 +111,23 @@ export async function fetchGitHubRepositoryArchive(
 ): Promise<GitHubFetchResult> {
   const repoRef = parseGitHubRepository(input)
   const defaultBranch = await getDefaultBranch(repoRef, options)
-  const zipUrl = `https://github.com/${repoRef.owner}/${repoRef.repo}/archive/refs/heads/${defaultBranch}.zip`
 
-  const response = await fetch(zipUrl, {
-    headers: buildGitHubHeaders(options.token),
+  // GitHub's ZIP download redirects to codeload.github.com which blocks CORS.
+  // In dev: use Vite's built-in proxy (/api/github-zip → github.com).
+  // In prod: use a CORS proxy or user-provided proxy from settings.
+  const archivePath = `/${repoRef.owner}/${repoRef.repo}/archive/refs/heads/${defaultBranch}.zip`
+  const customProxy = options.corsProxy?.trim()
+
+  let proxiedUrl: string
+  if (customProxy) {
+    proxiedUrl = `${customProxy}${encodeURIComponent(`https://github.com${archivePath}`)}`
+  } else if (import.meta.env.DEV) {
+    proxiedUrl = `/api/github-zip${archivePath}`
+  } else {
+    proxiedUrl = `https://corsproxy.io/?${encodeURIComponent(`https://github.com${archivePath}`)}`
+  }
+
+  const response = await fetch(proxiedUrl, {
     signal: options.signal,
   })
 
@@ -125,7 +139,7 @@ export async function fetchGitHubRepositoryArchive(
     repoName: `${repoRef.owner}/${repoRef.repo}`,
     repoUrl: `https://github.com/${repoRef.owner}/${repoRef.repo}`,
     defaultBranch,
-    zipUrl,
+    zipUrl: `https://github.com${archivePath}`,
     archive: await response.arrayBuffer(),
   }
 }
