@@ -1,0 +1,33 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-surface: #0a0a0f;
+  --color-elevated: #12121a;
+  --color-accent: #6366f1;
+  --color-accent-soft: #818cf8;
+  --color-border: #222330;
+  --color-text: #f5f5ff;
+  --color-text-muted: #a1a1bf;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-surface text-text antialiased;
+  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at 12% 14%, rgb(99 102 241 / 0.18), transparent 32%),
+    radial-gradient(circle at 84% 0%, rgb(79 70 229 / 0.12), transparent 30%),
+    linear-gradient(180deg, #0a0a0f 0%, #09090d 100%);
+}
+
+#root {
+  min-height: 100vh;
+}
